@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "OpenClaw Relay",
+  "version": "0.1.0",
+  "description": "Attach/detach current tab for OpenClaw browser automation via local relay.",
+  "permissions": [
+    "debugger",
+    "tabs",
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "service_worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "OpenClaw Relay",
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html",
+  "icons": {
+    "16":  "icons/icon16.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

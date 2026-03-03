@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>OpenClaw Relay</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; width: 260px; padding: 16px; margin: 0; }
+    h3 { margin: 0 0 12px; font-size: 14px; color: #1e293b; }
+    .status-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 14px;
+    }
+    .badge {
+      padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;
+    }
+    .badge.attached { background: #dcfce7; color: #166534; }
+    .badge.error    { background: #fee2e2; color: #991b1b; }
+    .badge.loading  { background: #f1f5f9; color: #64748b; }
+    .badge.detached { background: #f1f5f9; color: #64748b; }
+    .tab-info { font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .error-msg { font-size: 12px; color: #dc2626; margin-bottom: 10px; word-break: break-all; }
+    button {
+      width: 100%; padding: 8px; border: none; border-radius: 6px;
+      cursor: pointer; font-size: 14px; font-weight: 500;
+    }
+    button.attach { background: #3b82f6; color: white; }
+    button.attach:hover { background: #2563eb; }
+    button.detach { background: #f1f5f9; color: #374151; }
+    button.detach:hover { background: #e2e8f0; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .options-link { display: block; margin-top: 10px; font-size: 12px; color: #3b82f6; text-align: center; cursor: pointer; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h3>OpenClaw Relay</h3>
+  <div class="status-row">
+    <span class="badge detached" id="badge">—</span>
+    <span class="tab-info" id="tabInfo">加载中...</span>
+  </div>
+  <div class="error-msg" id="errorMsg" style="display:none;"></div>
+  <button id="toggleBtn" disabled>加载中...</button>
+  <a class="options-link" id="optionsLink">配置 port / token</a>
+  <script src="popup.js"></script>
+</body>
+</html>

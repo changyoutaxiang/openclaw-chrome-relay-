@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>OpenClaw Relay - 选项</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 24px; max-width: 480px; }
+    h2 { margin-top: 0; color: #1e293b; }
+    label { display: block; margin-bottom: 4px; font-size: 13px; color: #475569; }
+    input[type="text"], input[type="password"] {
+      width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1;
+      border-radius: 6px; font-size: 14px; box-sizing: border-box;
+      margin-bottom: 14px;
+    }
+    button {
+      background: #3b82f6; color: white; border: none; padding: 8px 20px;
+      border-radius: 6px; cursor: pointer; font-size: 14px;
+    }
+    button:hover { background: #2563eb; }
+    #status {
+      margin-top: 14px; padding: 10px 14px; border-radius: 6px;
+      font-size: 13px; display: none;
+    }
+    #status.ok  { background: #dcfce7; color: #166534; }
+    #status.err { background: #fee2e2; color: #991b1b; }
+    #health {
+      margin-top: 16px; font-size: 13px; color: #64748b;
+    }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    .dot.green { background: #22c55e; }
+    .dot.red   { background: #ef4444; }
+    .dot.grey  { background: #94a3b8; }
+  </style>
+</head>
+<body>
+  <h2>OpenClaw Relay 配置</h2>
+
+  <label for="port">Relay 端口</label>
+  <input type="text" id="port" placeholder="9223" />
+
+  <label for="token">鉴权 Token</label>
+  <input type="password" id="token" placeholder="与 relay .env 中的 TOKEN 一致" />
+
+  <button id="save">保存</button>
+
+  <div id="status"></div>
+  <div id="health"><span class="dot grey" id="dot"></span><span id="healthText">未检测</span></div>
+
+  <script src="options.js"></script>
+</body>
+</html>
