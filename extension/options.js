@@ -1,51 +1,74 @@
-const portEl      = document.getElementById('port');
-const tokenEl     = document.getElementById('token');
-const saveBtn     = document.getElementById('save');
-const statusEl    = document.getElementById('status');
-const dotEl       = document.getElementById('dot');
-const healthText  = document.getElementById('healthText');
+import { deriveRelayToken } from './background-utils.js'
+import { classifyRelayCheckException, classifyRelayCheckResponse } from './options-validation.js'
 
-// 加载已保存配置
-chrome.storage.local.get(['relayPort', 'relayToken'], ({ relayPort = '9223', relayToken = '' }) => {
-  portEl.value  = relayPort;
-  tokenEl.value = relayToken;
-  checkHealth(relayPort, relayToken);
-});
+const DEFAULT_PORT = 18792
 
-// 保存并重新检测
-saveBtn.addEventListener('click', async () => {
-  const port  = portEl.value.trim()  || '9223';
-  const token = tokenEl.value.trim();
-  await chrome.storage.local.set({ relayPort: port, relayToken: token });
-  showStatus('已保存', 'ok');
-  checkHealth(port, token);
-});
-
-function showStatus(msg, type) {
-  statusEl.textContent = msg;
-  statusEl.className   = type;
-  statusEl.style.display = 'block';
-  setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+function clampPort(value) {
+  const n = Number.parseInt(String(value || ''), 10)
+  if (!Number.isFinite(n)) return DEFAULT_PORT
+  if (n <= 0 || n > 65535) return DEFAULT_PORT
+  return n
 }
 
-async function checkHealth(port, token) {
-  dotEl.className  = 'dot grey';
-  healthText.textContent = '正在检测 relay...';
+function updateRelayUrl(port) {
+  const el = document.getElementById('relay-url')
+  if (!el) return
+  el.textContent = `http://127.0.0.1:${port}/`
+}
+
+function setStatus(kind, message) {
+  const status = document.getElementById('status')
+  if (!status) return
+  status.dataset.kind = kind || ''
+  status.textContent = message || ''
+}
+
+async function checkRelayReachable(port, token) {
+  const url = `http://127.0.0.1:${port}/json/version`
+  const trimmedToken = String(token || '').trim()
+  if (!trimmedToken) {
+    setStatus('error', 'Gateway token required. Save your gateway token to connect.')
+    return
+  }
   try {
-    const res = await fetch(`http://127.0.0.1:${port}/health`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-      signal: AbortSignal.timeout(4000),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      dotEl.className  = 'dot green';
-      healthText.textContent = `Relay 在线 (v${data.version ?? '?'})`;
-    } else {
-      dotEl.className  = 'dot red';
-      healthText.textContent = `Relay 返回 ${res.status}（检查 token 是否正确）`;
-    }
-  } catch (e) {
-    dotEl.className  = 'dot red';
-    healthText.textContent = `无法连接 relay（${e.message}）`;
+    const relayToken = await deriveRelayToken(trimmedToken, port)
+    // Delegate the fetch to the background service worker to bypass
+    // CORS preflight on the custom x-openclaw-relay-token header.
+    const res = await chrome.runtime.sendMessage({
+      type: 'relayCheck',
+      url,
+      token: relayToken,
+    })
+    const result = classifyRelayCheckResponse(res, port)
+    if (result.action === 'throw') throw new Error(result.error)
+    setStatus(result.kind, result.message)
+  } catch (err) {
+    const result = classifyRelayCheckException(err, port)
+    setStatus(result.kind, result.message)
   }
 }
+
+async function load() {
+  const stored = await chrome.storage.local.get(['relayPort', 'gatewayToken'])
+  const port = clampPort(stored.relayPort)
+  const token = String(stored.gatewayToken || '').trim()
+  document.getElementById('port').value = String(port)
+  document.getElementById('token').value = token
+  updateRelayUrl(port)
+  await checkRelayReachable(port, token)
+}
+
+async function save() {
+  const portInput = document.getElementById('port')
+  const tokenInput = document.getElementById('token')
+  const port = clampPort(portInput.value)
+  const token = String(tokenInput.value || '').trim()
+  await chrome.storage.local.set({ relayPort: port, gatewayToken: token })
+  portInput.value = String(port)
+  tokenInput.value = token
+  updateRelayUrl(port)
+  await checkRelayReachable(port, token)
+}
+
+document.getElementById('save').addEventListener('click', () => void save())
+void load()
